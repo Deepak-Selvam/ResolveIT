@@ -33,6 +33,7 @@ const get = (path, auth) => request("GET", path, null, auth);
 const post = (path, body, auth) => request("POST", path, body, auth);
 const put = (path, body) => request("PUT", path, body);
 const patch = (path, body) => request("PATCH", path, body);
+const del = (path) => request("DELETE", path);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // AUTH
@@ -48,6 +49,7 @@ export const authApi = {
   // Admin management
   createUser: (data) => post("/auth/admin/create-user", data),
   listUsers: (role) => get(`/auth/admin/users?role=${role}`),
+  deleteUser: (id) => del(`/auth/admin/users/${id}`),
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════

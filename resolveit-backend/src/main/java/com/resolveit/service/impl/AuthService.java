@@ -156,4 +156,20 @@ public class AuthService {
                 .map(UserProfile::from)
                 .collect(java.util.stream.Collectors.toList());
     }
+
+    public void deleteUser(String userId, String adminEmail) {
+        User targetUser = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        User admin = userRepository.findByEmail(adminEmail)
+                .orElseThrow(() -> new IllegalStateException("Admin not found"));
+
+        if (targetUser.getEmail().equals(admin.getEmail())) {
+            throw new IllegalArgumentException("Admins cannot delete themselves");
+        }
+
+        // Optional: Pre-check or cleanup logic here (e.g., reassigning complaints)
+        // For now, we just perform a hard delete as requested.
+        userRepository.delete(targetUser);
+    }
 }

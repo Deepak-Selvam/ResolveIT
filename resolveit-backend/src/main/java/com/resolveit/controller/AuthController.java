@@ -73,4 +73,13 @@ public class AuthController {
     public ResponseEntity<Success<java.util.List<UserProfile>>> listUsers(@RequestParam String role) {
         return ResponseEntity.ok(new Success<>("Users fetched", authService.listUsersByRole(role)));
     }
+
+    /** DELETE /api/auth/admin/users/{userId} — delete a user (admin only) */
+    @DeleteMapping("/admin/users/{userId}")
+    public ResponseEntity<Success<Void>> deleteUser(
+            @PathVariable String userId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        authService.deleteUser(userId, userDetails.getUsername());
+        return ResponseEntity.ok(new Success<>("User removed successfully", null));
+    }
 }

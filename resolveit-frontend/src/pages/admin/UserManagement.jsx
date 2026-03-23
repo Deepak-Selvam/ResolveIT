@@ -8,7 +8,7 @@ export default function UserManagement() {
     const [showModal, setShowModal] = useState(false);
     const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", phone: "", department: "", fullAccess: false });
     const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
 
     const CATEGORIES = [
         { id: "ROAD_DAMAGE", label: "Road Damage" },
@@ -43,56 +43,121 @@ export default function UserManagement() {
         finally { setSubmitting(false); }
     };
 
+    const handleDelete = async (userId) => {
+        if (!window.confirm("Are you sure you want to remove this user? This action cannot be undone.")) return;
+        try {
+            await authApi.deleteUser(userId);
+            fetchUsers();
+        } catch (err) { alert(err.message); }
+    };
+
+    const filteredUsers = users.filter(u => 
+        u.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="fade-up">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                <div style={{ display: "flex", gap: 12 }}>
-                    {["OFFICER", "ADMIN"].map(r => (
-                        <button
-                            key={r}
-                            className={role === r ? "btn-primary" : "btn-outline"}
-                            onClick={() => setRole(r)}
-                            style={{ padding: "8px 20px", fontSize: 13 }}
-                        >
-                            {r}s
-                        </button>
-                    ))}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, gap: 24, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ display: "flex", gap: 8, background: "#f1f5f9", padding: 4, borderRadius: 12 }}>
+                        {["OFFICER", "ADMIN", "CITIZEN"].map(r => (
+                            <button
+                                key={r}
+                                className={role === r ? "btn-primary" : "btn-outline"}
+                                onClick={() => { setRole(r); setSearchTerm(""); }}
+                                style={{ 
+                                    padding: "8px 16px", 
+                                    fontSize: 12, 
+                                    fontWeight: 700,
+                                    border: role === r ? "none" : "1px solid transparent",
+                                    boxShadow: role === r ? "0 4px 12px rgba(37, 99, 235, 0.2)" : "none",
+                                    borderRadius: 10,
+                                    transition: "all 0.2s"
+                                }}
+                            >
+                                {r}s
+                            </button>
+                        ))}
+                    </div>
+
+                    <div style={{ position: "relative", width: 320 }}>
+                        <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", opacity: 0.4 }}>🔍</span>
+                        <input 
+                            type="text" 
+                            placeholder={`Search ${role.toLowerCase()}s...`} 
+                            className="input-base"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{ 
+                                padding: "10px 16px 10px 38px", 
+                                fontSize: 13, 
+                                borderRadius: 12, 
+                                border: "1px solid #e2e8f0",
+                                background: "#fff",
+                                width: "100%",
+                                margin: 0
+                            }}
+                        />
+                    </div>
                 </div>
-                <button className="btn-primary" onClick={() => setShowModal(true)}>
-                    + Add New {role === "OFFICER" ? "Officer" : "Admin"}
-                </button>
+
+                <div style={{ display: "flex", gap: 12 }}>
+                    {role !== "CITIZEN" && (
+                        <button 
+                            className="btn-primary" 
+                            onClick={() => setShowModal(true)}
+                            style={{ padding: "10px 20px", borderRadius: 12, fontSize: 13, fontWeight: 700 }}
+                        >
+                            + Add New {role === "OFFICER" ? "Officer" : "Admin"}
+                        </button>
+                    )}
+                </div>
             </div>
 
             <div className="card" style={{ overflow: "hidden" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                     <thead style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
                         <tr>
+                            <th style={{ padding: "14px 24px", fontSize: 13, color: "#64748b" }}>ID</th>
                             <th style={{ padding: "14px 24px", fontSize: 13, color: "#64748b" }}>Name</th>
                             <th style={{ padding: "14px 24px", fontSize: 13, color: "#64748b" }}>Email</th>
                             <th style={{ padding: "14px 24px", fontSize: 13, color: "#64748b" }}>Phone</th>
                             {role === "OFFICER" && <th style={{ padding: "14px 24px", fontSize: 13, color: "#64748b" }}>Department</th>}
                             <th style={{ padding: "14px 24px", fontSize: 13, color: "#64748b" }}>Access</th>
                             <th style={{ padding: "14px 24px", fontSize: 13, color: "#64748b" }}>Status</th>
+                            <th style={{ padding: "14px 24px", fontSize: 13, color: "#64748b" }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan={role === "OFFICER" ? 6 : 5} style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>Loading users...</td></tr>
-                        ) : users.length === 0 ? (
-                            <tr><td colSpan={role === "OFFICER" ? 6 : 5} style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>No {role.toLowerCase()}s found.</td></tr>
-                        ) : users.map(u => (
+                            <tr><td colSpan={role === "OFFICER" ? 8 : 7} style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>Loading users...</td></tr>
+                        ) : filteredUsers.length === 0 ? (
+                            <tr><td colSpan={role === "OFFICER" ? 8 : 7} style={{ padding: 40, textAlign: "center", color: "#94a3b8" }}>No {role.toLowerCase()}s found.</td></tr>
+                        ) : filteredUsers.map(u => (
                             <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                                <td style={{ padding: "14px 24px", fontSize: 12, color: "#94a3b8", fontFamily: "monospace" }}>{u.id.substring(0, 8)}...</td>
                                 <td style={{ padding: "14px 24px", fontWeight: 700, fontSize: 14 }}>{u.fullName}</td>
                                 <td style={{ padding: "14px 24px", fontSize: 14, color: "#475569" }}>{u.email}</td>
                                 <td style={{ padding: "14px 24px", fontSize: 14, color: "#475569" }}>{u.phone || "—"}</td>
                                 {role === "OFFICER" && <td style={{ padding: "14px 24px", fontSize: 14, color: "#475569" }}>{u.department ? u.department.replace(/_/g, " ") : "General"}</td>}
                                 <td style={{ padding: "14px 24px" }}>
-                                    <span style={{ fontSize: 12, color: u.fullAccess ? "#1e40af" : "#64748b", fontWeight: 600 }}>
+                                    <span style={{ fontSize: 12, color: u.role === "ADMIN" || u.fullAccess ? "#1e40af" : "#64748b", fontWeight: 600 }}>
                                         {u.role === "ADMIN" || u.fullAccess ? "Full Access" : "Restricted"}
                                     </span>
                                 </td>
                                 <td style={{ padding: "14px 24px" }}>
                                     <span style={{ background: "#dcfce7", color: "#166534", padding: "4px 10px", borderRadius: 99, fontSize: 11, fontWeight: 700 }}>Active</span>
+                                </td>
+                                <td style={{ padding: "14px 24px" }}>
+                                    <button 
+                                        className="btn-outline" 
+                                        style={{ color: "#ef4444", borderColor: "#fecaca", padding: "4px 12px", fontSize: 12 }}
+                                        onClick={() => handleDelete(u.id)}
+                                    >
+                                        Remove
+                                    </button>
                                 </td>
                             </tr>
                         ))}
