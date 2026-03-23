@@ -1,0 +1,18 @@
+[
+  {
+    "_id": "69b824423393d445d6704635",
+    "email": "ROAD_DAMAGE",
+    "password": "ROAD_DAMAGE",
+    "firstName": "ROAD_DAMAGE",
+    "lastName": "ROAD_DAMAGE",
+    "phone": "ROAD_DAMAGE",
+    "gender": "ROAD_DAMAGE",
+    "dateOfBirth": "ROAD_DAMAGE",
+    "locality": "ROAD_DAMAGE",
+    "city": "ROAD_DAMAGE",
+    "role": "CITIZEN",
+    "verified": false,
+    "createdAt": "2026-03-16T15:39:46.238Z",
+    "_class": "com.resolveit.model.User"
+  }
+]
